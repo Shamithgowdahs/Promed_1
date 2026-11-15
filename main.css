@@ -1,0 +1,93 @@
+/* ==========================================================================
+   PROMED — Smart Medical Store Management System
+   Main Entry Stylesheet
+   ========================================================================== */
+
+@import url("./variables.css");
+@import url("./layout.css");
+@import url("./components.css");
+
+/* --- Generic Utility Classes --- */
+.text-accent {
+  color: var(--color-accent-light) !important;
+}
+
+.text-warning {
+  color: var(--status-warning) !important;
+}
+
+.text-danger {
+  color: var(--status-danger) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-mono {
+  font-family: var(--font-family-mono);
+}
+
+.badge-status {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-status-in-stock {
+  background-color: var(--status-normal-bg);
+  color: var(--status-normal);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-status-low-stock {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge-status-expiring {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Quick table styling used in views */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.promed-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  text-align: left;
+}
+
+.promed-table th {
+  background-color: var(--color-bg-sidebar);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.promed-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.promed-table tr:hover td {
+  background-color: rgba(52, 211, 153, 0.04);
+}
