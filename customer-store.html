@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f4ec">
+    <meta name="description" content="Browse the PROMED customer store catalog and submit pickup or delivery requests for staff review.">
+    <title>PROMED – Customer Store</title>
+    <link rel="stylesheet" href="./customer-store.css">
+    <script defer src="./api.js"></script>
+    <script defer src="./customer-store.js"></script>
+  </head>
+  <body>
+    <div class="announcement-bar">
+      <span class="announcement-label"><span class="pulse-dot"></span> PROMED Customer Store</span>
+      <span class="announcement-note">Live catalog records · orders require staff confirmation</span>
+      <a class="staff-link" href="./index.html" aria-label="Staff sign-in entry">Staff sign in <span aria-hidden="true">↗</span></a>
+    </div>
+
+    <header class="store-header">
+      <div class="header-main">
+        <a class="store-brand" href="#/home" aria-label="PROMED Customer Store home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40"><path d="M17 7h6v10h10v6H23v10h-6V23H7v-6h10z"/><path class="brand-spark" d="m28 6 1.4 3.6L33 11l-3.6 1.4L28 16l-1.4-3.6L23 11l3.6-1.4z"/></svg>
+          </span>
+          <span class="brand-copy"><strong>PROMED</strong><small>Care, close to home.</small></span>
+        </a>
+
+        <button class="mobile-menu-toggle" id="storeMenuToggle" type="button" aria-label="Open customer store menu" aria-expanded="false" aria-controls="storeNavigation">
+          <span></span><span></span><span></span>
+        </button>
+
+        <div class="header-tools" id="storeNavigation">
+          <nav class="store-nav" aria-label="Customer store">
+            <a href="#/home" data-nav="home">Home</a>
+            <a href="#/shop" data-nav="shop">Shop</a>
+            <a href="#/track" data-nav="track">Track order</a>
+          </nav>
+
+          <form class="header-search" id="headerSearch" role="search">
+            <label class="sr-only" for="headerSearchInput">Search products</label>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+            <input id="headerSearchInput" name="q" type="search" placeholder="Search healthcare essentials" autocomplete="off">
+            <button type="submit" aria-label="Search products"><span aria-hidden="true">→</span></button>
+          </form>
+
+          <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme">
+              <span class="theme-icon" aria-hidden="true">☼</span><span id="themeLabel">Light</span>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+            </button>
+            <a class="header-action" href="#/account" data-nav="account">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-1.5a6.5 6.5 0 0 1 13 0V20"/></svg>
+              <span>Account</span>
+            </a>
+            <a class="header-action basket-action" href="#/basket" data-nav="basket">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+              <span>Basket</span><span class="basket-count" id="basketCount" aria-label="Items in basket">0</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="storeContent" class="store-content" tabindex="-1"></main>
+
+    <footer class="store-footer">
+      <div class="footer-main">
+        <a class="store-brand footer-brand" href="#/home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40"><path d="M17 7h6v10h10v6H23v10h-6V23H7v-6h10z"/></svg>
+          </span>
+          <span class="brand-copy"><strong>PROMED</strong><small>Care, close to home.</small></span>
+        </a>
+        <p>Catalog and order requests use PROMED records. Orders are not stock reservations or payment confirmations; staff must review and confirm fulfilment.</p>
+        <a class="footer-staff-link" href="./index.html">Staff sign-in entry <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="footer-bottom">
+        <span>© PROMED · Customer Store</span>
+        <span>Availability may change; verify product information with a pharmacist.</span>
+      </div>
+    </footer>
+
+    <div class="store-toast" id="storeToast" role="status" aria-live="polite"></div>
+  </body>
+</html>

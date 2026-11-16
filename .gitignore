@@ -1,0 +1,25 @@
+__pycache__/
+.pytest_cache/
+.venv/
+backend/data/*.sqlite3
+backend/data/*.db
+assets/products/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Database files and backups
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite3-journal
+
+# Python environments
+venv/
+
+# Sensitive credentials
+*.pem
+*.key

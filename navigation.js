@@ -9,6 +9,7 @@ class PromedNavigation {
     this.mobileToggle = document.getElementById('mobileMenuToggle');
     this.backdrop = document.getElementById('sidebarBackdrop');
     this.navLinks = document.querySelectorAll('.nav-link');
+    this.brandLink = document.querySelector('.brand[data-view]');
     this.viewPanels = document.querySelectorAll('.view-panel');
     this.headerTitle = document.getElementById('headerViewTitle');
     this.headerSubtitle = document.getElementById('headerViewSubtitle');
@@ -22,13 +23,21 @@ class PromedNavigation {
         title: 'Medicine Inventory',
         subtitle: 'Registered pharmaceuticals, batch tracks, and shelf allocations'
       },
+      'products': {
+        title: 'Product Management',
+        subtitle: 'Owner-only product, category, image, and batch setup'
+      },
       'scan': {
         title: 'Scan Medicine',
         subtitle: 'Direct barcode input and hardware scanner interface'
       },
       'sales': {
         title: 'Dispensing & Sales',
-        subtitle: 'Counter register, prescription billing, and sale summaries'
+        subtitle: 'FEFO point of sale, invoice history, payments, and returns'
+      },
+      'orders': {
+        title: 'Customer Orders',
+        subtitle: 'Pharmacist review, pickup, delivery, and order history'
       },
       'expiry': {
         title: 'Expiry Management',
@@ -64,6 +73,14 @@ class PromedNavigation {
         }
       });
     });
+
+    if (this.brandLink) {
+      this.brandLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.navigateTo('dashboard');
+        this.closeMobileSidebar();
+      });
+    }
 
     // Mobile sidebar toggle handlers
     if (this.mobileToggle) {

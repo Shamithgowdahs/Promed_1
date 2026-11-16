@@ -1,0 +1,18 @@
+Storefront category photography
+
+These are illustrative category images only. They are not verified product
+photographs, do not represent current PROMED stock, and must not be used as
+product images on individual product records.
+
+All photos were downloaded from the Pexels image CDN and are used under the
+Pexels License: https://www.pexels.com/license/
+
+medicines.jpg          Pexels photo 28300481
+creams-gels.jpg        Pexels photo 8015480
+first-aid.jpg          Pexels photo 5673523
+personal-care.jpg      Pexels photo 8166777
+baby-care.jpg          Pexels photo 39557069
+health-nutrition.jpg   Pexels photo 13779116
+vitamins-minerals.jpg  Pexels photo 14029289
+medical-equipment.jpg  Pexels photo 3873176
+hygiene-sanitary.jpg   Pexels photo 7692279

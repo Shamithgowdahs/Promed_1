@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1220">
+    <title>PROMED | Pharmacy Management</title>
+    <link rel="stylesheet" href="./main.css">
+    <script defer src="./api.js"></script>
+    <script defer src="./navigation.js"></script>
+    <script defer src="./dashboard.js"></script>
+    <script defer src="./product-management.js"></script>
+    <script defer src="./analytics.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <main class="staff-auth-screen" id="staffSignIn">
+      <section class="staff-auth-card entry-gateway">
+        <a class="brand" href="./customer-store.html">
+          <span class="brand-mark">P</span>
+          <span><strong>PROMED</strong><small>Pharmacy management</small></span>
+        </a>
+        <h1>Welcome to PROMED</h1>
+        <p>Choose how you would like to continue.</p>
+        <div class="entry-options-grid">
+          <section class="entry-option-card" aria-labelledby="staffEntryHeading">
+            <p class="eyebrow">STORE WORKSPACE</p>
+            <h2 id="staffEntryHeading">Staff &amp; owner access</h2>
+            <p>Sign in with an owner, pharmacist, or store operator account. Customer accounts cannot access this workspace.</p>
+            <form id="staffLoginForm" class="stacked-form">
+              <label>Email<input name="email" type="email" maxlength="254" autocomplete="username" required></label>
+              <label>Password<input name="password" type="password" maxlength="128" autocomplete="current-password" required></label>
+              <p class="form-status" id="staffLoginStatus" role="status" aria-live="polite"></p>
+              <button class="btn btn-primary" type="submit">Sign in to workspace</button>
+            </form>
+            <p class="subtle-text">Owner setup is performed locally by the system administrator.</p>
+          </section>
+          <section class="entry-option-card customer-entry-card" aria-labelledby="customerEntryHeading">
+            <p class="eyebrow">CUSTOMER SHOPPING</p>
+            <h2 id="customerEntryHeading">Shop the store</h2>
+            <p>Browse available products, check recorded prices, and manage your basket in the customer Shopping Zone.</p>
+            <a class="btn btn-primary" href="./customer-store.html">Continue to Shopping Zone</a>
+            <p class="subtle-text">Only eligible, active inventory is offered. Adding items to a basket does not reserve stock.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+    <div class="app-shell" id="staffApp" hidden>
+      <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+        <a class="brand" href="#" data-view="dashboard" aria-label="PROMED dashboard">
+          <span class="brand-mark">P</span>
+          <span><strong>PROMED</strong><small>Pharmacy management</small></span>
+        </a>
+
+        <div class="sidebar-section-label">WORKSPACE</div>
+        <nav class="primary-nav" aria-label="Workspace">
+          <a class="nav-link active" href="#dashboard" data-view="dashboard"><span class="nav-icon">D</span>Dashboard</a>
+          <a class="nav-link" href="#inventory" data-view="inventory"><span class="nav-icon">I</span>Medicine inventory</a>
+          <a class="nav-link" id="productsNavLink" href="#products" data-view="products" hidden><span class="nav-icon">P</span>Product management</a>
+          <a class="nav-link" href="#scan" data-view="scan"><span class="nav-icon">S</span>Scan medicine</a>
+          <a class="nav-link" href="#sales" data-view="sales"><span class="nav-icon">$</span>Dispensing &amp; sales</a>
+          <a class="nav-link" href="#orders" data-view="orders"><span class="nav-icon">O</span>Customer orders</a>
+          <a class="nav-link" href="#expiry" data-view="expiry"><span class="nav-icon">E</span>Expiry management</a>
+          <a class="nav-link" href="#reorder" data-view="reorder"><span class="nav-icon">R</span>Reorder suggestions</a>
+          <a class="nav-link" id="reportsNavLink" href="#reports" data-view="reports"><span class="nav-icon">A</span>Analytics &amp; reports</a>
+          <a class="nav-link" href="#settings" data-view="settings"><span class="nav-icon">⚙</span>Settings</a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <span><strong>Local application</strong><small>SQLite-backed catalog</small></span>
+        </div>
+      </aside>
+
+      <div class="app-main">
+        <header class="topbar">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Open navigation menu" aria-controls="appSidebar">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="page-heading">
+            <h1 id="headerViewTitle">Pharmacy Dashboard</h1>
+            <p id="headerViewSubtitle">Overview of stock, activity, and storage box allocations</p>
+          </div>
+          <div class="topbar-meta">
+            <span class="connection-tag" id="apiConnectionStatus">SQLite API</span>
+            <span class="connection-tag" id="staffAccountName"></span>
+            <span class="clock-display" id="liveClockDisplay" aria-label="Current time"></span>
+            <button class="btn btn-secondary btn-sm" id="staffLogoutBtn" type="button">Sign out</button>
+          </div>
+        </header>
+
+        <div class="status-banner" id="appStatus" role="status" aria-live="polite"></div>
+        <main class="content-area">
+          <section class="view-panel active-view" id="view-dashboard" aria-labelledby="headerViewTitle">
+            <div class="welcome-row">
+              <div>
+                <p class="eyebrow">PHARMACY OVERVIEW</p>
+                <h2>Good day</h2>
+                <p class="section-description">Live stock and activity summaries from the local SQLite database.</p>
+              </div>
+              <div class="quick-actions">
+                <button class="btn btn-secondary" id="btnQuickOpenInventory" type="button">View inventory</button>
+                <button class="btn btn-primary" id="btnQuickScanBarcode" type="button">Enter barcode</button>
+              </div>
+            </div>
+
+            <div class="metrics-grid" aria-label="Pharmacy metrics">
+              <article class="metric-card">
+                <span class="metric-label">Registered medicines</span>
+                <strong id="metricRegisteredMedicines">—</strong>
+                <span class="metric-note">Active product records</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Available stock</span>
+                <strong id="metricAvailableStock">—</strong>
+                <span class="metric-note">Units in active, unexpired batches</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Today's sales</span>
+                <strong id="metricTodaySales">—</strong>
+                <span class="metric-note">Recorded sale totals</span>
+              </article>
+              <article class="metric-card metric-card-warning">
+                <span class="metric-label">Low-stock alerts</span>
+                <strong id="metricLowStock">—</strong>
+                <span class="metric-note">Products at or below threshold</span>
+              </article>
+              <article class="metric-card">
+                <span class="metric-label">Expiring batches</span>
+                <strong id="metricExpiringBatches">—</strong>
+                <span class="metric-note">In-stock expired or due within 30 days</span>
+              </article>
+            </div>
+
+            <section class="panel expiry-alert-panel" aria-labelledby="expiryAlertsHeading">
+              <div class="panel-heading">
+                <div><h2 id="expiryAlertsHeading">Batch expiry alerts</h2><p>On-hand quantities grouped by expiry risk.</p></div>
+                <span class="panel-kicker">LIVE DATABASE</span>
+              </div>
+              <div class="expiry-alert-grid" id="expiryAlertsContainer"></div>
+            </section>
+
+            <section class="panel search-panel" aria-labelledby="searchHeading">
+              <div class="panel-heading">
+                <div>
+                  <h2 id="searchHeading">Find a medicine</h2>
+                  <p>Search database products by name, generic, category, barcode, or location.</p>
+                </div>
+                <span class="panel-kicker">LIVE CATALOG</span>
+              </div>
+              <div class="search-control">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <input id="medicineSearchInput" type="search" placeholder="Search product name, barcode, or Box A1" autocomplete="off" aria-label="Search medicines">
+                <button id="searchClearBtn" type="button" class="search-clear-btn" aria-label="Clear search">Clear</button>
+              </div>
+              <div class="live-search-results" id="liveSearchResults">
+                <div class="table-responsive">
+                  <table class="promed-table">
+                    <thead><tr><th>Medicine</th><th>Location</th><th>Barcode</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="searchResultsList"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <div class="dashboard-columns">
+              <section class="panel" aria-labelledby="storageHeading">
+                <div class="panel-heading">
+                  <div><h2 id="storageHeading">Inventory locations</h2><p>Current product and unit totals by storage box.</p></div>
+                  <span class="panel-kicker">DATABASE</span>
+                </div>
+                <div class="storage-boxes-grid" id="storageBoxesContainer"></div>
+              </section>
+              <section class="panel activity-panel" aria-labelledby="activityHeading">
+                <div class="panel-heading">
+                  <div><h2 id="activityHeading">Recent stock transactions</h2><p>Recorded receipts, adjustments, and sales.</p></div>
+                  <span class="panel-kicker">LEDGER</span>
+                </div>
+                <div class="activity-feed" id="activityFeedContainer"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view-panel" id="view-inventory" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">CATALOG</p><h2>Medicine inventory</h2><p class="section-description">Products, batch quantities, and expiry dates stored in SQLite.</p></div>
+            </div>
+            <div class="workflow-grid">
+              <details class="panel workflow-card">
+                <summary>Register product</summary>
+                <form id="createProductForm" class="stacked-form">
+                  <label>Product name<input name="name" required maxlength="160"></label>
+                  <label>Generic name<input name="generic_name" maxlength="160"></label>
+                  <label>Barcode<input name="barcode" maxlength="64" pattern="[A-Za-z0-9._\-]+"></label>
+                  <label>Category<input name="category_name" required maxlength="80"></label>
+                  <div class="form-row">
+                    <label>Low-stock threshold<input name="min_threshold" type="number" min="0" max="1000000" step="1" value="0" required></label>
+                    <label>Unit price<input name="unit_price" type="number" min="0" step="0.01" value="0" required></label>
+                  </div>
+                  <label><span><input name="requires_prescription" type="checkbox"> Prescription required</span></label>
+                  <details>
+                    <summary>Customer-facing product details (optional)</summary>
+                    <label>Manufacturer<input name="manufacturer" maxlength="160"></label>
+                    <label>Local product image path<input name="image_url" maxlength="500" placeholder="/assets/product-image.webp"></label>
+                    <label>Product description<textarea name="description" maxlength="2000" rows="2"></textarea></label>
+                    <label>Ingredients and strengths<textarea name="ingredients_strengths" maxlength="2000" rows="2"></textarea></label>
+                    <label>Common uses<textarea name="common_uses" maxlength="2000" rows="2"></textarea></label>
+                    <label>Directions from approved label<textarea name="directions" maxlength="2000" rows="2"></textarea></label>
+                    <label>Warnings and precautions<textarea name="warnings" maxlength="2000" rows="2"></textarea></label>
+                    <label><span><input name="product_information_verified" type="checkbox"> Mark these details verified after pharmacist/label review</span></label>
+                  </details>
+                  <button class="btn btn-primary" type="submit">Create product</button>
+                </form>
+              </details>
+              <details class="panel workflow-card">
+                <summary>Add or receive a batch</summary>
+                <form id="receiveStockForm" class="stacked-form">
+                  <label>Product<select id="receiptProduct" name="product_id" required></select></label>
+                  <label>Batch number<input name="batch_number" required maxlength="80"></label>
+                  <div class="form-row">
+                    <label>Manufacturing date<input name="manufacturing_date" type="date"></label>
+                    <label>Expiry date<input name="expiry_date" type="date" required></label>
+                  </div>
+                  <div class="form-row">
+                    <label>Purchase date<input name="purchase_date" type="date" required></label>
+                    <label>Received quantity<input name="quantity" type="number" min="1" max="1000000" step="1" required></label>
+                  </div>
+                  <label>Location<select id="receiptLocation" name="location_code" required></select></label>
+                  <label>Supplier<select id="receiptSupplier" name="supplier_id"></select></label>
+                  <div class="form-row">
+                    <label>Purchase price (total, optional)<input name="purchase_price" type="number" min="0" step="0.01"></label>
+                    <label>Cost per unit (optional)<input name="unit_cost" type="number" min="0" step="0.01"></label>
+                  </div>
+                  <button class="btn btn-primary" type="submit">Record receipt</button>
+                </form>
+              </details>
+              <details class="panel workflow-card">
+                <summary>Adjust batch stock</summary>
+                <form id="adjustStockForm" class="stacked-form">
+                  <label>Product<select id="adjustmentProduct" required></select></label>
+                  <label>Batch<select id="adjustmentBatch" name="batch_id" required></select></label>
+                  <label>Quantity change<input name="quantity_delta" type="number" min="-1000000" max="1000000" step="1" required aria-describedby="adjustmentHelp"></label>
+                  <small id="adjustmentHelp">Use a negative number to remove units. Zero is not allowed.</small>
+                  <label>Reason<input name="reason" required maxlength="240" placeholder="Damaged, missing, or count correction"></label>
+                  <button class="btn btn-secondary" type="submit">Record adjustment</button>
+                </form>
+              </details>
+              <details class="panel workflow-card">
+                <summary>Manage storage locations</summary>
+                <form id="locationCreateForm" class="stacked-form">
+                  <strong>Add a location</strong>
+                  <div class="form-row">
+                    <label>Location code<input name="code" required maxlength="16" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*"></label>
+                    <label>Location name<input name="name" required maxlength="80"></label>
+                  </div>
+                  <button class="btn btn-primary" type="submit">Add location</button>
+                </form>
+                <form id="locationUpdateForm" class="stacked-form">
+                  <strong>Update a location</strong>
+                  <label>Existing location<select id="inventoryLocationSelect" name="location_id" required></select></label>
+                  <div class="form-row">
+                    <label>Location code<input name="code" required maxlength="16" pattern="[A-Za-z0-9][A-Za-z0-9_\-]*"></label>
+                    <label>Location name<input name="name" required maxlength="80"></label>
+                  </div>
+                  <button class="btn btn-secondary" type="submit">Save location</button>
+                </form>
+              </details>
+              <details class="panel workflow-card">
+                <summary>Manage suppliers</summary>
+                <form id="supplierCreateForm" class="stacked-form">
+                  <label>Supplier name<input name="name" required maxlength="160"></label>
+                  <label>Contact details<input name="contact_details" maxlength="160"></label>
+                  <label>Address<textarea name="address" maxlength="320" rows="2"></textarea></label>
+                  <label>Supplier reference<input name="reference_code" maxlength="80"></label>
+                  <button class="btn btn-primary" type="submit">Save supplier</button>
+                </form>
+              </details>
+            </div>
+            <p class="form-status" id="inventoryStatus" role="status" aria-live="polite"></p>
+            <div class="panel">
+              <div class="table-responsive">
+                <table class="promed-table inventory-table">
+                  <thead><tr><th>Medicine</th><th>Barcode</th><th>Category</th><th>Location quantities</th><th>Stock</th><th>Price</th><th>Expiry</th><th>Reorder point</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody id="inventoryTableBody"><tr><td colspan="10" class="empty-state">Loading inventory…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <section class="panel" aria-labelledby="transactionHistoryHeading">
+              <div class="panel-heading">
+                <div><h2 id="transactionHistoryHeading">Inventory transaction history</h2><p>Auditable stock changes with before-and-after quantities.</p></div>
+              </div>
+              <div class="table-responsive">
+                <table class="promed-table inventory-table">
+                  <thead><tr><th>Date</th><th>Product / batch</th><th>Location</th><th>Type</th><th>Change</th><th>Previous</th><th>Updated</th><th>Reason</th></tr></thead>
+                  <tbody id="inventoryTransactionTableBody"><tr><td colspan="8" class="empty-state">Loading transactions…</td></tr></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-products" aria-labelledby="headerViewTitle" hidden>
+            <div class="page-section-heading">
+              <div><p class="eyebrow">OWNER WORKSPACE</p><h2>Product management</h2><p class="section-description">Manage database categories, product details, customer images, and optional batch receiving.</p></div>
+              <button class="btn btn-secondary" id="refreshManagedProductsBtn" type="button">Refresh products</button>
+            </div>
+            <p class="form-status" id="productManagementStatus" role="status" aria-live="polite"></p>
+            <div class="product-management-layout">
+              <section class="panel product-editor-panel" aria-labelledby="productEditorHeading">
+                <div class="panel-heading">
+                  <div><h3 id="productEditorHeading">Add a product</h3><p>Only recorded product information is saved; optional fields can remain blank.</p></div>
+                </div>
+                <form id="managedProductForm" class="stacked-form">
+                  <input name="product_id" type="hidden">
+                  <div class="form-row">
+                    <label>Product name<input name="name" required maxlength="160"></label>
+                    <label>Generic name<input name="generic_name" maxlength="160"></label>
+                  </div>
+                  <div class="form-row">
+                    <label>Barcode<input name="barcode" maxlength="64" pattern="[A-Za-z0-9._\-]+"></label>
+                    <label>Category<select id="managedProductCategory" name="category_id" required></select></label>
+                  </div>
+                  <div class="form-row">
+                    <label>Manufacturer / company<input name="manufacturer" maxlength="160"></label>
+                    <label>Unit of measurement<input name="unit_of_measure" maxlength="40" value="unit" required></label>
+                  </div>
+                  <div class="form-row">
+                    <label>Selling price<input name="unit_price" type="number" min="0" step="0.01" value="0.00" required></label>
+                    <label>Low-stock threshold<input name="min_threshold" type="number" min="0" step="1" value="0" required></label>
+                  </div>
+                  <label>Product description<textarea name="description" maxlength="2000" rows="2"></textarea></label>
+                  <div class="form-row">
+                    <label class="checkbox-label"><input name="requires_prescription" type="checkbox"> Prescription required</label>
+                    <label class="checkbox-label"><input name="active" type="checkbox" checked> Active product</label>
+                  </div>
+                  <details class="product-optional-details">
+                    <summary>Optional product label details</summary>
+                    <label>Ingredients and strengths<textarea name="ingredients_strengths" maxlength="2000" rows="2"></textarea></label>
+                    <label>Common uses<textarea name="common_uses" maxlength="2000" rows="2"></textarea></label>
+                    <label>Directions from approved label<textarea name="directions" maxlength="2000" rows="2"></textarea></label>
+                    <label>Warnings and precautions<textarea name="warnings" maxlength="2000" rows="2"></textarea></label>
+                    <label class="checkbox-label"><input name="product_information_verified" type="checkbox"> Details reviewed against approved product label</label>
+                  </details>
+                  <label>Product image (JPG, PNG, WebP; max 5 MB)
+                    <input id="managedProductImage" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                  </label>
+                  <div class="product-image-preview" id="managedProductImagePreview" hidden></div>
+                  <button class="btn btn-secondary btn-sm" id="removeManagedProductImageBtn" type="button" hidden>Remove current image</button>
+                  <label class="checkbox-label stock-toggle"><input id="initialStockToggle" type="checkbox"> Receive initial stock now</label>
+                  <fieldset id="initialStockFields" class="initial-stock-fields" hidden>
+                    <legend>Initial batch details</legend>
+                    <label>Batch number<input name="batch_number" maxlength="80"></label>
+                    <div class="form-row">
+                      <label>Manufacturing date<input name="manufacturing_date" type="date"></label>
+                      <label>Expiry date<input name="expiry_date" type="date"></label>
+                    </div>
+                    <div class="form-row">
+                      <label>Purchase date<input name="purchase_date" type="date"></label>
+                      <label>Quantity<input name="quantity" type="number" min="1" max="1000000" step="1"></label>
+                    </div>
+                    <div class="form-row">
+                      <label>Storage location<select id="initialStockLocation" name="location_code"></select></label>
+                      <label>Supplier<select id="initialStockSupplier" name="supplier_id"></select></label>
+                    </div>
+                    <div class="form-row">
+                      <label>Batch purchase price (total)<input name="purchase_price" type="number" min="0" step="0.01"></label>
+                      <label>Cost per unit<input name="unit_cost" type="number" min="0" step="0.01"></label>
+                    </div>
+                  </fieldset>
+                  <div class="button-row">
+                    <button class="btn btn-primary" id="managedProductSubmit" type="submit">Save product</button>
+                    <button class="btn btn-secondary" id="cancelManagedProductEditBtn" type="button" hidden>Cancel edit</button>
+                  </div>
+                </form>
+              </section>
+              <section class="panel product-list-panel" aria-labelledby="managedProductsHeading">
+                <div class="panel-heading">
+                  <div><h3 id="managedProductsHeading">Products</h3><p>Availability excludes expired, damaged, and quarantined batches.</p></div>
+                </div>
+                <div class="product-management-filters">
+                  <label>Search products<input id="managedProductSearch" type="search" maxlength="160" placeholder="Name, generic, barcode, manufacturer"></label>
+                  <label>Category filter<select id="managedProductFilterCategory"><option value="">All categories</option></select></label>
+                  <label>Status filter<select id="managedProductFilterStatus"><option value="">All products</option><option value="true">Active</option><option value="false">Inactive</option></select></label>
+                </div>
+                <div class="table-responsive">
+                  <table class="promed-table inventory-table product-management-table">
+                    <thead><tr><th>Product</th><th>Category</th><th>Selling price</th><th>Availability</th><th>Batch / expiry</th><th>Locations</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="managedProductsTableBody"><tr><td colspan="8" class="empty-state">Load products to begin.</td></tr></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <section class="panel category-management-panel" aria-labelledby="managedCategoriesHeading">
+              <div class="panel-heading">
+                <div><h3 id="managedCategoriesHeading">Store categories</h3><p>Seeded categories remain available even with no products. Inactive categories are hidden from the customer catalogue.</p></div>
+              </div>
+              <form id="createManagedCategoryForm" class="category-create-form">
+                <label>New category<input name="name" maxlength="80" required></label>
+                <label>Description<input name="description" maxlength="1000"></label>
+                <button class="btn btn-secondary" type="submit">Add category</button>
+              </form>
+              <div class="table-responsive">
+                <table class="promed-table">
+                  <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Image path</th><th>Active</th><th>Action</th></tr></thead>
+                  <tbody id="managedCategoriesTableBody"><tr><td colspan="6" class="empty-state">Loading categories…</td></tr></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-scan" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">LOOKUP</p><h2>Scan medicine</h2><p class="section-description">Enter a barcode to retrieve a product record. Searching does not change stock.</p></div>
+            </div>
+            <div class="panel scan-panel">
+              <div class="scan-mark" aria-hidden="true">|||</div>
+              <h3>Manual barcode lookup</h3>
+              <p>Look up an existing product by its barcode. Stock updates are performed separately.</p>
+              <button class="btn btn-primary" id="btnScanOpenModal" type="button">Open barcode lookup</button>
+            </div>
+          </section>
+
+          <section class="view-panel" id="view-sales" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">POINT OF SALE</p><h2>Dispensing &amp; sales</h2><p class="section-description">Search is read-only. Eligible stock is allocated by FEFO only when checkout is submitted.</p></div>
+              <button class="btn btn-secondary" id="refreshSalesBtn" type="button">Refresh sales</button>
+            </div>
+            <p class="form-status" id="salesStatus" role="status" aria-live="polite"></p>
+            <div class="metrics-grid sales-metrics">
+              <article class="metric-card"><span class="metric-label">Today's revenue</span><strong id="salesTodayRevenue">—</strong><span class="metric-note">Net of recorded returns</span></article>
+              <article class="metric-card"><span class="metric-label">Today's transactions</span><strong id="salesTodayTransactions">—</strong><span class="metric-note">Recorded sale transactions</span></article>
+              <article class="metric-card"><span class="metric-label">This week</span><strong id="salesWeekRevenue">—</strong><span class="metric-note">Database-derived revenue</span></article>
+              <article class="metric-card"><span class="metric-label">This month</span><strong id="salesMonthRevenue">—</strong><span class="metric-note">Database-derived revenue</span></article>
+            </div>
+            <div class="dashboard-columns">
+              <section class="panel"><div class="panel-heading"><div><h2>Best sellers</h2><p>Net units sold, after recorded returns.</p></div></div>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Product</th><th>Units</th></tr></thead><tbody id="salesBestSellers"><tr><td colspan="2" class="empty-state">No sales recorded.</td></tr></tbody></table></div>
+              </section>
+              <section class="panel"><div class="panel-heading"><div><h2>Daily revenue</h2><p>Last seven days, net of recorded returns.</p></div></div>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Date</th><th>Revenue</th></tr></thead><tbody id="salesDailyRevenue"><tr><td colspan="2" class="empty-state">No sales recorded.</td></tr></tbody></table></div>
+              </section>
+            </div>
+            <div class="dashboard-columns pos-layout">
+              <section class="panel" aria-labelledby="posSearchHeading">
+                <div class="panel-heading"><div><h2 id="posSearchHeading">Find products</h2><p>Type a product name or scan a barcode with a keyboard-input scanner.</p></div></div>
+                <label class="sr-only" for="posProductSearch">Search product or barcode</label>
+                <input id="posProductSearch" class="search-input" type="search" autocomplete="off" placeholder="Product name or barcode; press Enter to search">
+                <div class="table-responsive">
+                  <table class="promed-table"><thead><tr><th>Product</th><th>Barcode</th><th>Sellable</th><th>Price</th><th>Prescription</th><th></th></tr></thead>
+                    <tbody id="posSearchResults"><tr><td colspan="6" class="empty-state">Search products to add them to the cart.</td></tr></tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="panel" aria-labelledby="posCartHeading">
+                <div class="panel-heading"><div><h2 id="posCartHeading">Billing cart</h2><p>Final totals are recalculated and validated by the backend.</p></div></div>
+                <div class="table-responsive">
+                  <table class="promed-table"><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th><th></th></tr></thead>
+                    <tbody id="posCartBody"><tr><td colspan="5" class="empty-state">Cart is empty.</td></tr></tbody>
+                  </table>
+                </div>
+                <div class="pos-totals">
+                  <div><span>Subtotal</span><strong id="posSubtotal">0.00</strong></div>
+                  <div><span>Discount</span><strong id="posDiscount">0.00</strong></div>
+                  <div><span>Configured tax</span><strong id="posTax">—</strong></div>
+                  <div class="pos-grand-total"><span>Estimated total</span><strong id="posTotal">—</strong></div>
+                </div>
+              </section>
+            </div>
+            <details class="panel workflow-card" id="checkoutDetails">
+              <summary>Customer, payment and checkout</summary>
+              <form id="checkoutForm" class="stacked-form">
+                <div class="form-row">
+                  <label>Customer name (optional)<input name="customer_name" maxlength="160"></label>
+                  <label>Customer phone (optional)<input name="customer_phone" maxlength="32" autocomplete="tel"></label>
+                </div>
+                <div class="form-row">
+                  <label>Operator reference<input name="operator_reference" required maxlength="80"></label>
+                  <label>Payment method<select name="payment_method" required><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option></select></label>
+                </div>
+                <div class="form-row">
+                  <label>Payment amount<input name="payment_amount" type="number" min="0.01" step="0.01" required></label>
+                  <label>Payment reference (UPI/card)<input name="payment_reference" maxlength="120"></label>
+                </div>
+                <details class="secondary-form">
+                  <summary>Discount and prescription details</summary>
+                  <div class="form-row">
+                    <label>Discount amount<input name="discount_amount" type="number" min="0" step="0.01" value="0"></label>
+                    <label>Discount authorized by<input name="discount_authorized_by" maxlength="80"></label>
+                  </div>
+                  <label>Discount reason<input name="discount_reason" maxlength="240"></label>
+                  <div class="form-row">
+                    <label>Prescription reference<input name="prescription_reference" maxlength="160"></label>
+                    <label>Pharmacist reference<input name="pharmacist_reference" maxlength="80"></label>
+                  </div>
+                </details>
+                <button class="btn btn-primary" type="submit" id="checkoutSubmitBtn">Complete checkout</button>
+              </form>
+            </details>
+            <section class="panel" id="invoicePreviewPanel" hidden aria-labelledby="invoicePreviewHeading">
+              <div class="panel-heading"><div><h2 id="invoicePreviewHeading">Invoice preview</h2><p id="invoicePreviewMeta"></p></div>
+                <div class="quick-actions"><a class="btn btn-secondary" id="invoicePdfLink" href="#" target="_blank" rel="noopener">Download PDF</a><button class="btn btn-secondary" id="printInvoiceBtn" type="button">Print invoice</button></div>
+              </div>
+              <div id="invoicePreviewContent"></div>
+            </section>
+            <section class="panel" aria-labelledby="salesHistoryHeading">
+              <div class="panel-heading"><div><h2 id="salesHistoryHeading">Sales history and returns</h2><p>Find invoices and record verified returns.</p></div></div>
+              <form id="salesHistoryForm" class="inline-search-form">
+                <label>Invoice number<input name="invoice_number" maxlength="40"></label>
+                <label>Customer phone<input name="customer_phone" maxlength="32"></label>
+                <button class="btn btn-primary" type="submit">Search invoices</button>
+              </form>
+              <div class="table-responsive"><table class="promed-table"><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th></th></tr></thead>
+                <tbody id="salesHistoryBody"><tr><td colspan="7" class="empty-state">Loading recent invoices…</td></tr></tbody></table></div>
+            </section>
+            <section class="panel" aria-labelledby="returnsHistoryHeading">
+              <div class="panel-heading"><div><h2 id="returnsHistoryHeading">Return history</h2><p>Recorded quantities, disposition, reason and refund amounts.</p></div></div>
+              <div class="table-responsive"><table class="promed-table"><thead><tr><th>Return</th><th>Invoice</th><th>Date</th><th>Items / disposition</th><th>Reason</th><th>Refund</th></tr></thead>
+                <tbody id="returnsHistoryBody"><tr><td colspan="6" class="empty-state">No returns recorded.</td></tr></tbody></table></div>
+            </section>
+            <section class="panel" id="returnPanel" hidden aria-labelledby="returnHeading">
+              <div class="panel-heading"><div><h2 id="returnHeading">Record a return</h2><p>Returned medicine is quarantined unless its condition and batch are verified by an operator.</p></div></div>
+              <form id="returnForm" class="stacked-form">
+                <input type="hidden" name="sale_id">
+                <div id="returnItems"></div>
+                <div class="form-row">
+                  <label>Return reason<input name="reason" required maxlength="240"></label>
+                  <label>Refund method<select name="refund_method" required><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option></select></label>
+                </div>
+                <div class="form-row">
+                  <label>Operator reference<input name="operator_reference" required maxlength="80"></label>
+                  <label>Refund reference (UPI/card)<input name="refund_reference" maxlength="120"></label>
+                </div>
+                <button class="btn btn-primary" type="submit">Record return and refund</button>
+              </form>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-orders" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading"><div><p class="eyebrow">CUSTOMER ORDERS</p><h2>Order management</h2><p class="section-description">Creating an order does not reserve or deduct stock. Prescription-required orders need pharmacist verification before acceptance.</p></div>
+              <button class="btn btn-secondary" id="refreshOrdersBtn" type="button">Refresh orders</button>
+            </div>
+            <p class="form-status" id="ordersStatus" role="status" aria-live="polite"></p>
+            <details class="panel workflow-card">
+              <summary>Create customer order</summary>
+              <form id="createOrderForm" class="stacked-form">
+                <div class="form-row"><label>Customer name<input name="customer_name" maxlength="160"></label><label>Phone<input name="customer_phone" maxlength="32" autocomplete="tel"></label></div>
+                <div class="form-row"><label>Fulfillment<select name="fulfillment_method"><option value="pickup">Pickup</option><option value="delivery">Home delivery</option></select></label><label>Operator reference<input name="operator_reference" maxlength="80"></label></div>
+                <label>Delivery address (required for delivery)<input name="delivery_address" maxlength="320"></label>
+                <label>Order notes<textarea name="notes" maxlength="500" rows="2"></textarea></label>
+                <label>Prescription reference, if applicable<input name="prescription_reference" maxlength="160"></label>
+                <div class="form-row"><label>Product<select id="orderProductSelect" name="product_id"></select></label><label>Quantity<input name="quantity" type="number" min="1" step="1" value="1"></label></div>
+                <button class="btn btn-secondary" id="addOrderItemBtn" type="button">Add product to order</button>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Product</th><th>Quantity</th><th></th></tr></thead><tbody id="orderItemsBody"><tr><td colspan="3" class="empty-state">No products added.</td></tr></tbody></table></div>
+                <button class="btn btn-primary" type="submit">Create order</button>
+              </form>
+            </details>
+            <section class="panel" aria-labelledby="ordersTableHeading">
+              <div class="panel-heading"><div><h2 id="ordersTableHeading">Customer orders</h2><p>Review and progress orders through the supported workflow.</p></div></div>
+              <div class="table-responsive"><table class="promed-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Pickup / delivery</th><th>Prescription</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="ordersTableBody"><tr><td colspan="8" class="empty-state">No orders loaded.</td></tr></tbody></table></div>
+            </section>
+            <section class="panel" id="orderDetailsPanel" hidden aria-labelledby="orderDetailsHeading">
+              <div class="panel-heading"><div><h2 id="orderDetailsHeading">Order details and history</h2></div></div>
+              <div id="orderDetailsContent"></div>
+            </section>
+          </section>
+          </section>
+
+          <section class="view-panel" id="view-expiry" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">BATCH TRACKING</p><h2>Batch &amp; expiry management</h2><p class="section-description">Batch-level quantities, supplier records, expiry risk, and quarantine status.</p></div>
+              <button class="btn btn-secondary" id="refreshExpiryBtn" type="button">Refresh batches</button>
+            </div>
+            <p class="subtle-text">Sale allocation uses FEFO: the earliest-expiring active, unexpired batches are issued first. Quarantined, damaged, and expired quantities are excluded.</p>
+            <form id="batchFilterForm" class="panel expiry-filter-grid">
+              <label>Product name<input id="batchProductFilter" name="product_name" maxlength="160"></label>
+              <label>Batch number<input id="batchNumberFilter" name="batch_number" maxlength="80"></label>
+              <label>Expiry from<input id="batchExpiryFrom" name="expiry_from" type="date"></label>
+              <label>Expiry to<input id="batchExpiryTo" name="expiry_to" type="date"></label>
+              <label>Category<select id="batchCategoryFilter" name="category_id"><option value="">All categories</option></select></label>
+              <label>Location<select id="batchLocationFilter" name="location_code"><option value="">All locations</option></select></label>
+              <label>Expiry category
+                <select id="batchExpiryCategoryFilter" name="expiry_category">
+                  <option value="">All expiry categories</option>
+                  <option value="expired">Expired</option>
+                  <option value="within_30_days">Within 30 days</option>
+                  <option value="within_60_days">31–60 days</option>
+                  <option value="within_90_days">61–90 days</option>
+                  <option value="safe">Safe stock</option>
+                </select>
+              </label>
+              <label>Batch status
+                <select id="batchStatusFilter" name="status">
+                  <option value="">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="quarantined">Quarantined</option>
+                  <option value="damaged">Damaged</option>
+                </select>
+              </label>
+              <button class="btn btn-primary" type="submit">Apply filters</button>
+              <button class="btn btn-secondary" id="clearBatchFiltersBtn" type="button">Clear</button>
+            </form>
+            <p class="form-status" id="expiryStatus" role="status" aria-live="polite"></p>
+            <div class="panel">
+              <div class="table-responsive">
+                <table class="promed-table inventory-table">
+                  <thead><tr><th>Product</th><th>Batch</th><th>Manufactured</th><th>Expiry</th><th>Expiry alert</th><th>Supplier</th><th>Purchase date</th><th>Received</th><th>Remaining / available</th><th>Unit cost</th><th>Location</th><th>Status / details</th></tr></thead>
+                  <tbody id="expiryTableBody"><tr><td colspan="12" class="empty-state">Loading batch inventory…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="view-panel" id="view-reorder" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">INVENTORY PLANNING</p><h2>Reorder suggestions</h2><p class="section-description">Products at or below their configured minimum. Suggested quantity targets twice the minimum threshold.</p></div>
+              <button class="btn btn-secondary" id="refreshLowStockBtn" type="button">Refresh</button>
+            </div>
+            <p class="form-status" id="lowStockStatus" role="status" aria-live="polite"></p>
+            <div class="panel">
+              <div class="table-responsive">
+                <table class="promed-table inventory-table">
+                  <thead><tr><th>Medicine</th><th>Barcode</th><th>Stock</th><th>Minimum</th><th>Suggested order</th><th>Location quantities</th><th>Action</th></tr></thead>
+                  <tbody id="lowStockTableBody"><tr><td colspan="7" class="empty-state">Open this view to load low-stock products.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="view-panel" id="view-reports" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading">
+              <div><p class="eyebrow">OWNER WORKSPACE</p><h2>Pharmacy analytics &amp; reports</h2><p class="section-description">Financial, inventory, expiry, purchasing, order, and stock movement reports from saved database records.</p></div>
+              <button class="btn btn-secondary" id="refreshReportsBtn" type="button">Refresh reports</button>
+            </div>
+            <form class="panel reports-filters" id="reportsFilterForm">
+              <label>Date range
+                <select id="reportsDatePreset" name="preset">
+                  <option value="last30">Last 30 days</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last7">Last 7 days</option>
+                  <option value="thisMonth">This month</option>
+                  <option value="previousMonth">Previous month</option>
+                  <option value="custom">Custom range</option>
+                </select>
+              </label>
+              <label class="reports-custom-date" id="reportsFromWrap" hidden>From<input type="date" id="reportsDateFrom" name="date_from"></label>
+              <label class="reports-custom-date" id="reportsToWrap" hidden>To<input type="date" id="reportsDateTo" name="date_to"></label>
+              <button class="btn btn-primary" type="submit">Apply date range</button>
+            </form>
+            <p class="form-status" id="reportsStatus" role="status" aria-live="polite"></p>
+            <div class="metrics-grid reports-metrics" aria-label="Owner analytics summary">
+              <article class="metric-card"><span class="metric-label">Net revenue</span><strong id="reportNetRevenue">—</strong><span class="metric-note">Sales less recorded returns</span></article>
+              <article class="metric-card"><span class="metric-label">Transactions</span><strong id="reportTransactionCount">—</strong><span class="metric-note">Recorded sale invoices</span></article>
+              <article class="metric-card"><span class="metric-label">Average transaction</span><strong id="reportAverageTransaction">—</strong><span class="metric-note">Net revenue per invoice</span></article>
+              <article class="metric-card"><span class="metric-label">Gross profit</span><strong id="reportGrossProfit">—</strong><span class="metric-note" id="reportProfitNote">Estimated from recorded batch costs</span></article>
+              <article class="metric-card"><span class="metric-label">Units sold</span><strong id="reportUnitsSold">—</strong><span class="metric-note">Net of returned quantities</span></article>
+              <article class="metric-card"><span class="metric-label">Customer orders</span><strong id="reportOrderCount">—</strong><span class="metric-note">Order requests in selected range</span></article>
+              <article class="metric-card"><span class="metric-label">Eligible stock</span><strong id="reportEligibleStock">—</strong><span class="metric-note">Active, unexpired batches</span></article>
+              <article class="metric-card"><span class="metric-label">Recorded inventory value</span><strong id="reportInventoryValue">—</strong><span class="metric-note" id="reportInventoryValueNote">At recorded batch cost</span></article>
+              <article class="metric-card metric-card-warning"><span class="metric-label">Low-stock products</span><strong id="reportLowStockCount">—</strong><span class="metric-note">At or below configured threshold</span></article>
+              <article class="metric-card"><span class="metric-label">Active products</span><strong id="reportActiveProducts">—</strong><span class="metric-note">Current database status</span></article>
+            </div>
+            <div class="reports-two-column">
+              <section class="panel" aria-labelledby="reportsTrendHeading">
+                <div class="panel-heading"><div><h3 id="reportsTrendHeading">Sales trend</h3><p>Recorded invoice totals by day or month.</p></div></div>
+                <div class="report-chart" id="reportsTrendChart" role="img" aria-label="Sales trend chart"></div>
+              </section>
+              <section class="panel" aria-labelledby="reportsExpiryHeading">
+                <div class="panel-heading"><div><h3 id="reportsExpiryHeading">Current expiry exposure</h3><p>Eligible-batch expiry quantities, from current inventory.</p></div></div>
+                <div class="reports-expiry-grid" id="reportsExpirySummary"></div>
+              </section>
+            </div>
+            <div class="reports-two-column">
+              <section class="panel">
+                <div class="panel-heading"><div><h3>Best-selling products</h3><p>Units sold in the selected date range.</p></div></div>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Product</th><th>Category</th><th>Units</th><th>Net sales</th><th>Estimated profit</th></tr></thead><tbody id="reportBestSellers"></tbody></table></div>
+              </section>
+              <section class="panel">
+                <div class="panel-heading"><div><h3>Category performance</h3><p>Recorded sales excluding tax.</p></div></div>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Category</th><th>Units</th><th>Net sales</th></tr></thead><tbody id="reportCategoryPerformance"></tbody></table></div>
+              </section>
+            </div>
+            <div class="reports-two-column">
+              <section class="panel">
+                <div class="panel-heading"><div><h3>Customer order workflow</h3><p>Orders created within the selected period; viewing this report does not allocate stock.</p></div></div>
+                <div class="reports-status-list" id="reportOrderWorkflow"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-heading"><div><h3>Purchasing &amp; recent receipts</h3><p>Recorded batch purchase values only; no pending purchase-order workflow is configured.</p></div></div>
+                <p id="reportPurchaseSummary" class="reports-summary-note"></p>
+                <div class="table-responsive"><table class="promed-table"><thead><tr><th>Date</th><th>Product</th><th>Batch</th><th>Quantity</th><th>Recorded value</th></tr></thead><tbody id="reportRecentReceipts"></tbody></table></div>
+              </section>
+            </div>
+            <section class="panel reports-data-panel">
+              <div class="panel-heading"><div><h3>Detailed reports</h3><p>Search, sort, filter by the selected date range, and export the current report as CSV or PDF.</p></div></div>
+              <div class="reports-table-controls">
+                <label>Report<select id="reportsReportType">
+                  <option value="sales">Sales &amp; revenue</option><option value="profit">Gross profit</option>
+                  <option value="inventory">Inventory value</option><option value="inventory-by-location">Stock by location</option><option value="low-stock">Low stock</option>
+                  <option value="expiry">Batch expiry</option><option value="supplier-purchases">Supplier purchases</option>
+                  <option value="customer-orders">Customer orders</option><option value="stock-movement">Stock movement</option>
+                </select></label>
+                <label>Search report<input id="reportsSearchInput" type="search" maxlength="120" placeholder="Search rows"></label>
+                <label>Category<select id="reportsCategoryFilter" disabled><option value="">All categories</option></select></label>
+                <label>Sort by<select id="reportsSortBy"></select></label>
+                <label>Direction<select id="reportsSortDirection"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
+                <button class="btn btn-secondary" id="exportReportCsvBtn" type="button">Export CSV</button>
+                <button class="btn btn-secondary" id="exportReportPdfBtn" type="button">Export PDF</button>
+              </div>
+              <p class="reports-summary-note" id="reportsTableNote"></p>
+              <div class="table-responsive"><table class="promed-table"><thead id="reportsTableHead"></thead><tbody id="reportsTableBody"></tbody></table></div>
+            </section>
+            <ul class="reports-limitations" id="reportsNotes"></ul>
+          </section>
+
+          <section class="view-panel" id="view-settings" aria-labelledby="headerViewTitle">
+            <div class="page-section-heading"><div><p class="eyebrow">WORKSPACE</p><h2>System settings</h2><p class="section-description">Store identity and tax are explicit configuration; no tax rate is assumed.</p></div></div>
+            <p class="form-status" id="salesConfigStatus" role="status" aria-live="polite"></p>
+            <section class="panel" aria-labelledby="storeConfigHeading">
+              <div class="panel-heading"><div><h2 id="storeConfigHeading">Store and invoice configuration</h2><p>Required before paid POS checkout can be completed.</p></div></div>
+              <form id="salesConfigForm" class="stacked-form">
+                <label>Store name<input name="store_name" required maxlength="160"></label>
+                <div class="form-row"><label>Store contact phone<input name="store_phone" required maxlength="32"></label><label>Currency code (ISO 4217)<input name="currency_code" required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" placeholder="e.g. INR"></label></div>
+                <label>Store address (optional)<input name="store_address" maxlength="320"></label>
+                <label>Configured tax rate (%)<input name="tax_rate_percent" type="number" min="0" max="100" step="0.01" required></label>
+                <button class="btn btn-primary" type="submit">Save store configuration</button>
+              </form>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="barcode-modal" id="barcodeModal" role="dialog" aria-modal="true" aria-labelledby="barcodeModalTitle">
+      <div class="barcode-modal-card">
+        <div class="modal-heading">
+          <div><p class="eyebrow">CATALOG LOOKUP</p><h2 id="barcodeModalTitle">Enter medicine barcode</h2></div>
+          <button class="modal-close" type="button" data-close-modal aria-label="Close barcode lookup">&times;</button>
+        </div>
+        <p class="section-description">Lookup checks saved product records. Scanning does not modify stock.</p>
+        <div class="barcode-entry">
+          <input id="modalBarcodeInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Enter barcode" aria-label="Medicine barcode">
+          <button class="btn btn-primary" id="barcodeLookupBtn" type="button">Look up</button>
+        </div>
+        <div class="barcode-result-card" id="barcodeResultCard" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="barcode-modal" id="batchDetailsModal" role="dialog" aria-modal="true" aria-labelledby="batchDetailsTitle">
+      <div class="barcode-modal-card batch-details-card">
+        <div class="modal-heading">
+          <div><p class="eyebrow">BATCH RECORD</p><h2 id="batchDetailsTitle">Batch details</h2></div>
+          <button class="modal-close" type="button" data-close-batch-modal aria-label="Close batch details">&times;</button>
+        </div>
+        <div id="batchDetailsContent" aria-live="polite"></div>
+      </div>
+    </div>
+  </body>
+</html>
